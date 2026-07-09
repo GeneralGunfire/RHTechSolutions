@@ -37,7 +37,7 @@ export default function HeroLoader({
     >
       <div className="h-px w-32 overflow-hidden rounded-full bg-white/10">
         <div
-          className="h-full rounded-full bg-linear-to-r from-[#5b7fff] to-white transition-[width] duration-200 ease-out"
+          className="h-full rounded-full bg-linear-to-r from-[#8b95a6] to-white transition-[width] duration-200 ease-out"
           style={{ width: `${Math.max(6, Math.min(100, progress))}%` }}
         />
       </div>

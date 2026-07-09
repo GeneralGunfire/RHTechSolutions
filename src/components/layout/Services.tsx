@@ -1,4 +1,7 @@
-import Image from "next/image";
+"use client";
+
+import { motion, type Variants } from "framer-motion";
+import TiltCard from "@/components/ui/TiltCard";
 
 const SERVICES = [
   {
@@ -61,47 +64,66 @@ const SERVICES = [
   },
 ];
 
+const container: Variants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
+  },
+};
+
+const card: Variants = {
+  hidden: { opacity: 0, y: 64, scale: 0.92, filter: "blur(10px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
 export default function Services() {
   return (
-    <section className="w-full bg-[#0a0c10] pt-16 pb-24 sm:pt-20 sm:pb-32">
-      <div className="mb-16 px-6 text-center sm:mb-20">
-        <span className="text-xs font-medium uppercase tracking-[0.3em] text-zinc-500">
-          What we do
-        </span>
-        <h2 className="mx-auto mt-4 max-w-3xl font-(family-name:--font-space-grotesk) text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl">
-          Software built end to end.
+    <section className="relative w-full py-24 sm:py-32">
+      {/* Dotted grid backdrop — continues the hero's atmosphere */}
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.16)_1px,transparent_1px)] bg-size-[34px_34px] opacity-10 mask-[radial-gradient(ellipse_at_center,black_25%,transparent_75%)]" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 48 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 mb-16 px-6 text-center sm:mb-20"
+      >
+        <h2 className="mx-auto max-w-3xl font-(family-name:--font-space-grotesk) text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
+          <span className="bg-linear-to-b from-white to-zinc-500 bg-clip-text text-transparent">
+            Software built end to end.
+          </span>
         </h2>
-      </div>
+      </motion.div>
 
-      <div className="relative w-full overflow-hidden">
-        <Image
-          src="/images/footer-showcase.png"
-          alt="RH Tech Solutions across desktop, tablet, and mobile"
-          width={1536}
-          height={1024}
-          sizes="100vw"
-          quality={100}
-          className="h-160 w-full object-cover [image-rendering:-webkit-optimize-contrast] sm:h-190 md:h-208"
-          style={{ filter: "contrast(1.04) saturate(1.05)" }}
-        />
-      </div>
-
-      <div className="mx-auto mt-16 grid max-w-6xl gap-5 px-5 sm:mt-20 sm:grid-cols-2 sm:gap-6 sm:px-10">
+      <motion.div
+        variants={container}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        className="relative z-10 mx-auto grid max-w-6xl gap-5 px-5 sm:grid-cols-2 sm:gap-6 sm:px-10"
+      >
         {SERVICES.map((service) => (
-            <div
-              key={service.title}
-              className="group relative flex flex-col gap-6 overflow-hidden rounded-2xl border border-white/15 bg-white/6 p-8 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300 hover:bg-white/10 sm:p-10"
-            >
+          <motion.div key={service.title} variants={card} style={{ transformPerspective: 1200 }}>
+            <TiltCard className="group relative flex h-full flex-col gap-6 overflow-hidden rounded-2xl border border-white/15 bg-white/6 p-8 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300 hover:bg-white/10 sm:p-10">
               <div className="flex items-start justify-between">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  className="h-9 w-9 text-[#5b7fff] transition-transform duration-300 group-hover:scale-110"
-                >
-                  {service.icon}
-                </svg>
-                <span className="font-(family-name:--font-space-grotesk) text-sm font-semibold text-white/20 transition-colors duration-300 group-hover:text-white/35">
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition-colors duration-300 group-hover:border-white/25 group-hover:bg-white/10">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    className="h-6 w-6 text-zinc-200 transition-transform duration-300 group-hover:scale-110"
+                  >
+                    {service.icon}
+                  </svg>
+                </span>
+                <span className="font-(family-name:--font-space-grotesk) text-sm font-semibold text-white/20 transition-colors duration-300 group-hover:text-white/40">
                   {service.index}
                 </span>
               </div>
@@ -116,9 +138,11 @@ export default function Services() {
               </div>
 
               <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 ring-1 ring-inset ring-white/20 transition-opacity duration-300 group-hover:opacity-100" />
-            </div>
+              <div className="pointer-events-none absolute -bottom-1/2 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-white/3 opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
+            </TiltCard>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
