@@ -6,7 +6,7 @@ const STATS = [
 
 export default function StatsBar() {
   return (
-    <div className="w-full bg-linear-to-b from-[#0f1319] via-[#141a24] to-[#1e2632]">
+    <div className="w-full">
       <div className="mx-auto grid max-w-5xl grid-cols-3 divide-x divide-white/8 px-6">
         {STATS.map((stat) => (
           <div

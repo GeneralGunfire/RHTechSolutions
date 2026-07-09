@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function Navbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50">
-      <div className="border-b border-white/5 bg-white/3 backdrop-blur-xl backdrop-saturate-150">
+      <div className="border-b border-white/8 bg-[#0b0f16]/80 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:h-18 sm:px-8">
           <a
             href="/"

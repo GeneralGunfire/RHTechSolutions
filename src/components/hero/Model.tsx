@@ -17,7 +17,7 @@ export default function Model() {
   });
 
   return (
-    <Bounds fit clip margin={0.7}>
+    <Bounds fit clip margin={1.6}>
       <group ref={groupRef}>
         <Center>
           <primitive object={scene} />
