@@ -45,5 +45,6 @@ next-env.d.ts
 /images/
 /*.mp4
 /*.glb
+/*.png
 /filestructure.txt
 /zoom-check.js

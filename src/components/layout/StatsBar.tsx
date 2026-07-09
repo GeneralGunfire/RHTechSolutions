@@ -6,12 +6,12 @@ const STATS = [
 
 export default function StatsBar() {
   return (
-    <div className="w-full border-y border-white/8 bg-linear-to-b from-[#1e2632] via-[#141a24] to-[#0f1319]">
+    <div className="w-full bg-linear-to-b from-[#0f1319] via-[#141a24] to-[#1e2632]">
       <div className="mx-auto grid max-w-5xl grid-cols-3 divide-x divide-white/8 px-6">
         {STATS.map((stat) => (
           <div
             key={stat.label}
-            className="flex flex-col items-center justify-center gap-1 py-10 text-center sm:py-14"
+            className="flex flex-col items-center justify-center gap-1 py-14 text-center sm:py-20"
           >
             <span className="font-(family-name:--font-space-grotesk) text-3xl font-bold text-white sm:text-4xl">
               {stat.value}
