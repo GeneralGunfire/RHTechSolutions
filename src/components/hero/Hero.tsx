@@ -171,7 +171,6 @@ export default function Hero() {
   // Beat 1 — headline, parallax layers moving at different speeds.
   // Exits with a deliberate fade + rise + blur + scale-down rather than a
   // plain slide, so it reads as a considered transition instead of a cut.
-  const kickerY = useTransform(progress, [0, 0.15], [0, -60]);
   const line1Y = useTransform(progress, [0, 0.15], [0, -140]);
   const line2Y = useTransform(progress, [0, 0.15], [0, -220]);
   const subY = useTransform(progress, [0, 0.15], [0, -300]);
@@ -312,22 +311,6 @@ export default function Hero() {
           className="relative z-20 mx-auto flex h-full w-full max-w-7xl items-center px-6 will-change-transform sm:px-10 lg:px-16"
         >
           <div className="flex max-w-2xl flex-col items-start text-left">
-            <motion.span
-              style={{ y: kickerY }}
-              initial={{ y: 24 }}
-              animate={{ y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-              className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 py-1.5 pr-4 pl-3 backdrop-blur-sm"
-            >
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              </span>
-              <span className="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-zinc-300">
-                RH Tech Solutions
-              </span>
-            </motion.span>
-
             <h1 className="mt-7 font-(family-name:--font-space-grotesk) text-5xl font-bold leading-[1.02] tracking-tight [text-shadow:0_2px_28px_rgba(0,0,0,0.6)] sm:text-7xl md:text-8xl">
               {headlineLines.map((line, i) => (
                 <motion.span

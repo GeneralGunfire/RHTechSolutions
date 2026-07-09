@@ -1,12 +1,10 @@
 import Hero from "@/components/hero/Hero";
 import SmoothScroll from "@/components/scroll/SmoothScroll";
-import Reveal from "@/components/scroll/Reveal";
-import SiteShowcase from "@/components/gallery/SiteShowcase";
-import Services from "@/components/layout/Services";
-import { ShuffleCards } from "@/components/ui/testimonial-cards-demo";
-import TeamShowcaseDemo from "@/components/ui/team-showcase-demo";
-import ContactSection from "@/components/layout/ContactSection";
-import Footer from "@/components/layout/Footer";
+import WorkJourney from "@/components/journey/WorkJourney";
+import ServicesJourney from "@/components/journey/ServicesJourney";
+import VoicesJourney from "@/components/journey/VoicesJourney";
+import TeamSection from "@/components/journey/TeamSection";
+import ClosingSection from "@/components/journey/ClosingSection";
 
 export default function Home() {
   return (
@@ -17,37 +15,26 @@ export default function Home() {
           <Hero />
         </div>
 
-        {/* Act II — the work, pinned horizontal gallery */}
+        {/* Act II — the work, drawn in code, one beat per product */}
         <div id="work">
-          <SiteShowcase />
+          <WorkJourney />
         </div>
 
-        {/* Act III — who it's for */}
-        <section className="flex w-full flex-col items-center px-6 pt-6 pb-24 sm:pb-32">
-          <Reveal className="mb-20 flex flex-col items-center">
-            <h2 className="max-w-3xl px-6 text-center font-(family-name:--font-space-grotesk) text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
-              <span className="bg-linear-to-b from-white to-zinc-500 bg-clip-text text-transparent">
-                Made for the average user.
-              </span>
-            </h2>
-          </Reveal>
-          <div className="flex w-full flex-col items-center gap-32 sm:gap-40">
-            <ShuffleCards />
-            <TeamShowcaseDemo />
-          </div>
-        </section>
-
-        {/* Act IV — what we do */}
+        {/* Act III — what we do, told in 3D */}
         <div id="services">
-          <Services />
+          <ServicesJourney />
         </div>
 
-        {/* Act V — the invitation */}
+        {/* Act IV — the people who use it */}
+        <VoicesJourney />
+
+        {/* Act V — the people behind it */}
+        <TeamSection />
+
+        {/* Act VI — the invitation */}
         <div id="contact">
-          <ContactSection />
+          <ClosingSection />
         </div>
-
-        <Footer />
       </div>
     </SmoothScroll>
   );
