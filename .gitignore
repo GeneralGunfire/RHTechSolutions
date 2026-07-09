@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# raw source assets (not served by the app; kept locally only)
+/_assets_backup/
+/images/
+/*.mp4
+/*.glb
+/filestructure.txt
+/zoom-check.js
