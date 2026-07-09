@@ -281,13 +281,6 @@ export default function ClosingSection() {
 
             <MagneticCTA />
 
-            <a
-              href="mailto:tessyc@mweb.co.za"
-              className="font-(family-name:--font-geist-mono) text-xs tracking-[0.2em] text-zinc-500 transition-colors hover:text-zinc-300"
-            >
-              tessyc@mweb.co.za
-            </a>
-
             <motion.span
               style={{
                 opacity: brandOpacity,
@@ -326,12 +319,6 @@ export default function ClosingSection() {
             </a>
             <a href="#services" className="transition-colors hover:text-white">
               Services
-            </a>
-            <a
-              href="mailto:tessyc@mweb.co.za"
-              className="transition-colors hover:text-white"
-            >
-              tessyc@mweb.co.za
             </a>
           </nav>
 
