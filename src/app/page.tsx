@@ -5,15 +5,18 @@ import ServicesJourney from "@/components/journey/ServicesJourney";
 import VoicesJourney from "@/components/journey/VoicesJourney";
 import TeamSection from "@/components/journey/TeamSection";
 import ClosingSection from "@/components/journey/ClosingSection";
+import JourneyBackdrop from "@/components/journey/JourneyBackdrop";
 
 export default function Home() {
   return (
     <SmoothScroll>
-      <div className="flex flex-col bg-[#0a0c10]">
+      {/* Viewport-locked atmosphere — never scrolls, so section hand-offs
+          show no background movement. */}
+      <JourneyBackdrop />
+
+      <div className="relative flex flex-col">
         {/* Act I — the hero journey */}
-        <div className="bg-linear-to-b from-[#050607] via-[#0c0e11] to-[#0a0c10]">
-          <Hero />
-        </div>
+        <Hero />
 
         {/* Act II — the work, drawn in code, one beat per product */}
         <div id="work">

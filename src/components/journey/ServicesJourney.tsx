@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Sparkles } from "@react-three/drei";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import { Environment } from "@react-three/drei";
 import {
   motion,
   useScroll,
@@ -10,29 +10,11 @@ import {
   type MotionValue,
 } from "framer-motion";
 import {
-  MathUtils,
-  type Group,
-  type Material,
-  type Mesh,
-} from "three";
-
-function smoothstep(edge0: number, edge1: number, x: number) {
-  const t = MathUtils.clamp((x - edge0) / (edge1 - edge0), 0, 1);
-  return t * t * (3 - 2 * t);
-}
-
-function sampleTrack(track: [number, number][], p: number) {
-  let a = track[0];
-  let b = track[track.length - 1];
-  for (let i = 0; i < track.length - 1; i++) {
-    if (p >= track[i][0] && p <= track[i + 1][0]) {
-      a = track[i];
-      b = track[i + 1];
-      break;
-    }
-  }
-  return MathUtils.lerp(a[1], b[1], smoothstep(a[0], b[0], p));
-}
+  BeatShape,
+  JourneyLogo,
+  KeyframeCameraRig,
+  type Track,
+} from "./three-utils";
 
 // Camera keyframe tracks — the same language as the hero's rig, but the
 // camera now orbits the ACTIVE shape, not the origin: the lookAt target pans
@@ -41,7 +23,7 @@ function sampleTrack(track: [number, number][], p: number) {
 // height keys give alternating high/low crane angles per beat.
 
 // Where the camera is looking (x) — pans from shape to shape between beats.
-const CAM_TARGET_X: [number, number][] = [
+const CAM_TARGET_X: Track = [
   [0.0, 0],
   [0.13, 0.9],
   [0.34, 0.9],
@@ -53,25 +35,26 @@ const CAM_TARGET_X: [number, number][] = [
   [1.0, -0.9],
 ];
 
-// Distance from the subject — macro dive on each beat, pull-out between.
-const CAM_RADIUS: [number, number][] = [
+// Distance from the subject — each beat dives to a different framing:
+// 01 close, 02 extreme macro, 03 a wider establishing shot, 04 close again.
+const CAM_RADIUS: Track = [
   [0.0, 5.4],
-  [0.15, 2.3],
-  [0.29, 3.7],
+  [0.15, 1.7],
+  [0.29, 2.6],
   [0.36, 4.6],
-  [0.42, 3.9],
-  [0.51, 2.3],
+  [0.42, 3.4],
+  [0.51, 1.35],
   [0.58, 4.6],
-  [0.64, 2.2],
-  [0.73, 3.7],
+  [0.64, 2.8],
+  [0.73, 3.6],
   [0.8, 4.6],
-  [0.86, 3.9],
-  [0.94, 2.4],
-  [1.0, 5.2],
+  [0.86, 2.6],
+  [0.97, 1.5],
+  [1.0, 2.2],
 ];
 
 // Orbit around the subject — each hold sweeps a full arc, alternating sides.
-const CAM_ORBIT: [number, number][] = [
+const CAM_ORBIT: Track = [
   [0.0, 0],
   [0.15, 0.6],
   [0.29, -0.4],
@@ -85,7 +68,7 @@ const CAM_ORBIT: [number, number][] = [
 ];
 
 // Crane height — high angle looking down, then low angle looking up.
-const CAM_HEIGHT: [number, number][] = [
+const CAM_HEIGHT: Track = [
   [0.0, 0.1],
   [0.15, 0.8],
   [0.29, -0.55],
@@ -98,87 +81,7 @@ const CAM_HEIGHT: [number, number][] = [
   [1.0, 0.15],
 ];
 
-/* ------------------------------------------------------------------ */
-/*  3D layer — one wireframe object per service, crossfaded by scroll */
-/* ------------------------------------------------------------------ */
-
 type Range = [number, number];
-
-// Each service owns a scroll window; its shape fades/scales in and out.
-function BeatShape({
-  progress,
-  range,
-  xOffset,
-  spin = 0.22,
-  children,
-}: {
-  progress: MotionValue<number>;
-  range: Range;
-  xOffset: number;
-  spin?: number;
-  children: ReactNode;
-}) {
-  const groupRef = useRef<Group>(null);
-  const time = useRef(0);
-
-  useFrame((_, delta) => {
-    const group = groupRef.current;
-    if (!group) return;
-
-    time.current += delta;
-    const p = progress.get();
-    const [a, b] = range;
-    const vis =
-      smoothstep(a - 0.03, a + 0.05, p) * (1 - smoothstep(b - 0.05, b + 0.03, p));
-
-    group.visible = vis > 0.005;
-    if (!group.visible) return;
-
-    // Slower self-spin — the camera provides the angle changes now, and a
-    // fast-spinning subject would cancel the orbit out visually.
-    group.scale.setScalar(0.85 + vis * 0.35);
-    group.position.set(xOffset, (1 - vis) * -0.4, 0);
-    group.rotation.y = time.current * spin * 0.5 + p * Math.PI;
-    group.rotation.x = Math.sin(time.current * 0.16) * 0.18;
-
-    group.traverse((obj) => {
-      const material = (obj as Mesh).material as Material | undefined;
-      if (material) material.opacity = vis;
-    });
-  });
-
-  return <group ref={groupRef}>{children}</group>;
-}
-
-function CameraRig({ progress }: { progress: MotionValue<number> }) {
-  const { camera } = useThree();
-  const lookX = useRef(0);
-
-  useFrame((_, delta) => {
-    const p = progress.get();
-    const targetX = sampleTrack(CAM_TARGET_X, p);
-    const radius = sampleTrack(CAM_RADIUS, p);
-    const theta = sampleTrack(CAM_ORBIT, p);
-    const height = sampleTrack(CAM_HEIGHT, p);
-
-    // Orbit the active subject, not the origin — this is what makes the
-    // framing actually change angle instead of just translating.
-    camera.position.x = MathUtils.damp(
-      camera.position.x,
-      targetX + Math.sin(theta) * radius,
-      5,
-      delta
-    );
-    camera.position.z = MathUtils.damp(camera.position.z, Math.cos(theta) * radius, 5, delta);
-    camera.position.y = MathUtils.damp(camera.position.y, height, 5, delta);
-    lookX.current = MathUtils.damp(lookX.current, targetX, 5, delta);
-    camera.lookAt(lookX.current, 0, 0);
-  });
-
-  return null;
-}
-
-/* ------------------------------------------------------------------ */
 
 type Service = {
   index: string;
@@ -217,16 +120,19 @@ const SERVICES: Service[] = [
 const TEXT_BEATS: [number, number, number, number][] = [
   [0.15, 0.2, 0.29, 0.34],
   [0.37, 0.42, 0.51, 0.56],
-  [0.59, 0.64, 0.73, 0.78],
-  [0.81, 0.86, 0.94, 0.99],
+  [0.57, 0.62, 0.71, 0.76],
+  // Last beat holds fully visible right through p=1 (holdEnd === fadeOutEnd)
+  // so it rides out fully drawn at the hand-off. Framer Motion requires
+  // transform input ranges within [0,1].
+  [0.79, 0.84, 1, 1],
 ];
 
 // Shape windows mirror the text beats (fade edges handled in-shader-side).
 const SHAPE_RANGES: Range[] = [
   [0.15, 0.34],
   [0.37, 0.56],
-  [0.59, 0.78],
-  [0.81, 0.99],
+  [0.57, 0.76],
+  [0.79, 1],
 ];
 
 function ServiceBeat({
@@ -301,12 +207,12 @@ export default function ServicesJourney() {
     offset: ["start start", "end end"],
   });
 
-  // Intro beat — tilts away overhead as the camera dives to the first shape.
-  const introOpacity = useTransform(progress, [0, 0.03, 0.08, 0.13], [0, 1, 1, 0]);
-  const introY = useTransform(progress, [0, 0.13], [50, -90]);
-  const introScale = useTransform(progress, [0, 0.13], [0.96, 1.08]);
+  // Intro beat — visible from p=0 so the incoming frame is never blank.
+  const introOpacity = useTransform(progress, [0, 0.08, 0.13], [1, 1, 0]);
+  const introY = useTransform(progress, [0, 0.13], [0, -90]);
+  const introScale = useTransform(progress, [0, 0.13], [1, 1.08]);
   const introRotateX = useTransform(progress, [0, 0.13], [0, 14]);
-  const introBlur = useTransform(progress, [0, 0.03, 0.08, 0.13], [6, 0, 0, 10]);
+  const introBlur = useTransform(progress, [0, 0.08, 0.13], [0, 0, 10]);
   const introFilter = useTransform(introBlur, (b) => `blur(${b}px)`);
   const introVisibility = useTransform(progress, (p) =>
     p <= 0.14 ? "visible" : "hidden"
@@ -315,7 +221,8 @@ export default function ServicesJourney() {
   const barScale = useTransform(progress, [0.05, 0.97], [0, 1]);
   const railOpacity = useTransform(progress, [0.09, 0.15], [0, 1]);
 
-  // Scrim keeps text readable over the brightest shape angles.
+  // Scrim keeps text readable over the brightest logo angles; it holds to
+  // the end since the final beat now rides out fully drawn.
   const scrimOpacity = useTransform(progress, [0.13, 0.2], [0, 0.35]);
 
   useEffect(() => {
@@ -332,13 +239,6 @@ export default function ServicesJourney() {
   return (
     <section ref={sectionRef} className="relative h-[560vh] w-full">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* Dotted grid backdrop */}
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] bg-[size:34px_34px] opacity-12 [mask-image:radial-gradient(ellipse_at_50%_50%,black_25%,transparent_72%)]" />
-
-        {/* Ambient glows */}
-        <div className="pointer-events-none absolute -left-40 top-1/4 z-0 h-160 w-160 rounded-full bg-[#aab4c5]/15 blur-[140px]" />
-        <div className="pointer-events-none absolute -right-32 bottom-0 z-0 h-96 w-96 rounded-full bg-[#8b95a6]/10 blur-[110px]" />
-
         {/* 3D scene — same lighting rig as the hero */}
         <div className="absolute inset-0 z-10 touch-pan-y">
           <Canvas
@@ -352,58 +252,33 @@ export default function ServicesJourney() {
             <directionalLight position={[-6, -1, -4]} intensity={0.3} color="#c3cbd8" />
             <directionalLight position={[0, -4, 2]} intensity={0.25} color="#3a4150" />
 
-            {/* 01 — Full-stack: interlocking structure */}
-            <BeatShape progress={progress} range={SHAPE_RANGES[0]} xOffset={1.3}>
-              <mesh>
-                <icosahedronGeometry args={[1.2, 1]} />
-                <meshStandardMaterial wireframe transparent color="#dfe5ee" metalness={0.6} roughness={0.3} />
-              </mesh>
-              <mesh rotation={[0.4, 0.8, 0]}>
-                <icosahedronGeometry args={[0.7, 0]} />
-                <meshStandardMaterial wireframe transparent color="#8b95a6" metalness={0.6} roughness={0.4} />
-              </mesh>
-            </BeatShape>
+            {/* The brand logo carries every beat — the camera rig re-frames
+                it from a new angle per service, so each beat reads as a
+                different shot of the same subject. */}
+            <Suspense fallback={null}>
+              <BeatShape progress={progress} range={SHAPE_RANGES[0]} xOffset={1.3} spin={0.14}>
+                <JourneyLogo />
+              </BeatShape>
+              <BeatShape progress={progress} range={SHAPE_RANGES[1]} xOffset={-1.3} spin={0.2}>
+                <JourneyLogo />
+              </BeatShape>
+              <BeatShape progress={progress} range={SHAPE_RANGES[2]} xOffset={1.3} spin={0.1}>
+                <JourneyLogo />
+              </BeatShape>
+              <BeatShape progress={progress} range={SHAPE_RANGES[3]} xOffset={-1.3} spin={0.17}>
+                <JourneyLogo />
+              </BeatShape>
+              <Environment preset="city" />
+            </Suspense>
 
-            {/* 02 — AI: continuous woven knot */}
-            <BeatShape progress={progress} range={SHAPE_RANGES[1]} xOffset={-1.3} spin={0.3}>
-              <mesh>
-                <torusKnotGeometry args={[0.85, 0.24, 140, 18]} />
-                <meshStandardMaterial wireframe transparent color="#dfe5ee" metalness={0.6} roughness={0.3} />
-              </mesh>
-            </BeatShape>
 
-            {/* 03 — Government & enterprise: nested lattice */}
-            <BeatShape progress={progress} range={SHAPE_RANGES[2]} xOffset={1.3} spin={0.16}>
-              <mesh>
-                <boxGeometry args={[1.6, 1.6, 1.6]} />
-                <meshStandardMaterial wireframe transparent color="#dfe5ee" metalness={0.6} roughness={0.3} />
-              </mesh>
-              <mesh rotation={[0.79, 0.79, 0]}>
-                <boxGeometry args={[1.0, 1.0, 1.0]} />
-                <meshStandardMaterial wireframe transparent color="#8b95a6" metalness={0.6} roughness={0.4} />
-              </mesh>
-              <mesh rotation={[0.4, 0.4, 0.4]}>
-                <boxGeometry args={[0.5, 0.5, 0.5]} />
-                <meshStandardMaterial wireframe transparent color="#ffffff" metalness={0.7} roughness={0.3} />
-              </mesh>
-            </BeatShape>
-
-            {/* 04 — Consumer: a sphere of individual points (people) */}
-            <BeatShape progress={progress} range={SHAPE_RANGES[3]} xOffset={-1.3} spin={0.12}>
-              <points>
-                <sphereGeometry args={[1.2, 28, 28]} />
-                <pointsMaterial size={0.028} transparent color="#dfe5ee" sizeAttenuation />
-              </points>
-              <mesh>
-                <sphereGeometry args={[0.55, 20, 20]} />
-                <meshStandardMaterial wireframe transparent color="#8b95a6" metalness={0.6} roughness={0.4} />
-              </mesh>
-            </BeatShape>
-
-            <Sparkles count={90} scale={[14, 12, 6]} size={2.2} speed={0.3} opacity={0.4} color="#dfe5ee" />
-            <Sparkles count={120} scale={[20, 16, 4]} size={1.3} speed={0.18} opacity={0.25} color="#8b95a6" />
-
-            <CameraRig progress={progress} />
+            <KeyframeCameraRig
+              progress={progress}
+              targetX={CAM_TARGET_X}
+              radius={CAM_RADIUS}
+              orbit={CAM_ORBIT}
+              height={CAM_HEIGHT}
+            />
           </Canvas>
         </div>
 
@@ -412,7 +287,6 @@ export default function ServicesJourney() {
           style={{ opacity: scrimOpacity, willChange: "opacity" }}
           className="pointer-events-none absolute inset-0 z-[14] bg-black"
         />
-        <div className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_at_50%_45%,transparent_50%,rgba(0,0,0,0.5)_100%)]" />
 
         {/* Intro beat */}
         <motion.div

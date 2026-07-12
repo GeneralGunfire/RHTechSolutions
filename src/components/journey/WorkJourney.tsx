@@ -26,7 +26,7 @@ const PROJECTS: Project[] = [
     description:
       "Automated traffic enforcement platform for South African municipalities — detection, processing, and payment in one pipeline.",
     tags: ["Municipal", "Automation", "Payments"],
-    image: "/images/site-autoenforce.png",
+    image: "/images/site-autoenforce.webp",
   },
   {
     index: "02",
@@ -35,16 +35,16 @@ const PROJECTS: Project[] = [
     description:
       "The most comprehensive South African government data collection — indexed, searchable, and built for scale.",
     tags: ["Data platform", "Search", "Scale"],
-    image: "/images/site-meridian.png",
+    image: "/images/site-meridian.webp",
   },
   {
     index: "03",
-    name: "Private Player",
-    tagline: "Music, without the noise.",
+    name: "Ikhaya Analytics",
+    tagline: "Property intelligence, mapped.",
     description:
-      "A personal music player with a refined, minimal listening experience — fast, private, and yours.",
-    tags: ["Consumer", "Media", "Design"],
-    image: "/images/site-privateplayer.png",
+      "Deep, data-driven property insights across South Africa — search, compare, and understand the market before you buy or rent.",
+    tags: ["Property", "Analytics", "Data"],
+    image: "/images/site-ikhaya.webp",
   },
   {
     index: "04",
@@ -53,7 +53,7 @@ const PROJECTS: Project[] = [
     description:
       "The all-in-one platform for South African schools, students, and teachers — timetables, marks, and communication in one place.",
     tags: ["Education", "Platform", "SaaS"],
-    image: "/images/site-prospect.png",
+    image: "/images/site-prospect.webp",
   },
 ];
 
@@ -61,8 +61,11 @@ const PROJECTS: Project[] = [
 const BEAT_WINDOWS: [number, number, number, number][] = [
   [0.16, 0.22, 0.31, 0.36],
   [0.38, 0.44, 0.53, 0.58],
-  [0.6, 0.66, 0.75, 0.8],
-  [0.82, 0.88, 0.95, 0.99],
+  [0.58, 0.64, 0.73, 0.78],
+  // Last beat holds fully visible right through p=1 (holdEnd === fadeOutEnd)
+  // so the fully drawn scene rides out with the hand-off, never fading to a
+  // blank frame. Framer Motion requires transform input ranges within [0,1].
+  [0.8, 0.85, 1, 1],
 ];
 
 function ProjectBeat({
@@ -108,8 +111,6 @@ function ProjectBeat({
   const textBlur = useTransform(progress, [a, b, c, d], [10, 0, 0, 8]);
   const textFilter = useTransform(textBlur, (v) => `blur(${v}px)`);
 
-  // Giant ghosted index drifts faster than the text — parallax depth.
-  const indexY = useTransform(progress, [a, d], [140, -140]);
 
   return (
     <motion.div
@@ -133,32 +134,20 @@ function ProjectBeat({
           alt={project.name}
           fill
           sizes="100vw"
-          quality={70}
-          className="object-cover [filter:grayscale(0.7)_saturate(0.45)_brightness(0.52)_contrast(1.08)]"
+          quality={75}
+          className="object-cover [filter:saturate(0.95)_brightness(0.8)_contrast(1.04)]"
         />
       </motion.div>
 
-      {/* Palette wash + reading scrims */}
-      <div className="absolute inset-0 bg-[#0a0c10]/30 mix-blend-multiply" />
-      <div className="absolute inset-0 bg-linear-to-t from-[#050607] via-[#0a0c10]/25 to-[#0a0c10]/70" />
+      {/* Reading scrims — kept to the text's corner so the product stays vivid */}
+      <div className="absolute inset-0 bg-linear-to-t from-[#050607]/90 via-[#0a0c10]/10 to-[#0a0c10]/35" />
       <div
         className={`absolute inset-0 ${
           align === "left"
-            ? "bg-linear-to-r from-[#050607]/85 via-[#0a0c10]/30 to-transparent"
-            : "bg-linear-to-l from-[#050607]/85 via-[#0a0c10]/30 to-transparent"
+            ? "bg-linear-to-r from-[#050607]/70 via-[#0a0c10]/10 to-transparent"
+            : "bg-linear-to-l from-[#050607]/70 via-[#0a0c10]/10 to-transparent"
         }`}
       />
-
-      {/* Ghosted index — deep background layer */}
-      <motion.span
-        aria-hidden
-        style={{ y: indexY }}
-        className={`absolute top-[6%] font-(family-name:--font-space-grotesk) text-[34vw] font-bold leading-none text-white/4 select-none sm:text-[26vw] ${
-          align === "left" ? "right-[2%]" : "left-[2%]"
-        }`}
-      >
-        {project.index}
-      </motion.span>
 
       {/* Copy */}
       <motion.div
@@ -167,12 +156,8 @@ function ProjectBeat({
           align === "right" ? "items-end text-right" : "items-start text-left"
         }`}
       >
-        <span className="mb-4 flex items-center gap-2.5 font-(family-name:--font-geist-mono) text-[0.65rem] tracking-[0.3em] text-zinc-400 uppercase">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          </span>
-          {project.index} / 04 — Live
+        <span className="mb-4 font-(family-name:--font-geist-mono) text-[0.65rem] tracking-[0.3em] text-zinc-400 uppercase">
+          {project.index} / 04
         </span>
         <h3 className="font-(family-name:--font-space-grotesk) text-5xl font-bold tracking-tight text-white [text-shadow:0_2px_40px_rgba(0,0,0,0.9)] sm:text-7xl md:text-8xl">
           {project.name}
@@ -209,12 +194,13 @@ export default function WorkJourney() {
     offset: ["start start", "end end"],
   });
 
-  // Intro beat — the camera "tilts down" into the first project.
-  const introOpacity = useTransform(progress, [0, 0.03, 0.09, 0.14], [0, 1, 1, 0]);
-  const introY = useTransform(progress, [0, 0.14], [50, -90]);
-  const introScale = useTransform(progress, [0, 0.14], [0.96, 1.08]);
+  // Intro beat — already fully visible at p=0 so the frame that slides in
+  // during the hand-off carries content, never a blank screen.
+  const introOpacity = useTransform(progress, [0, 0.09, 0.14], [1, 1, 0]);
+  const introY = useTransform(progress, [0, 0.14], [0, -90]);
+  const introScale = useTransform(progress, [0, 0.14], [1, 1.08]);
   const introRotateX = useTransform(progress, [0, 0.14], [0, 14]);
-  const introBlur = useTransform(progress, [0, 0.03, 0.09, 0.14], [6, 0, 0, 10]);
+  const introBlur = useTransform(progress, [0, 0.09, 0.14], [0, 0, 10]);
   const introFilter = useTransform(introBlur, (b) => `blur(${b}px)`);
   const introVisibility = useTransform(progress, (p) =>
     p <= 0.15 ? "visible" : "hidden"
@@ -225,10 +211,9 @@ export default function WorkJourney() {
 
   return (
     <section ref={sectionRef} className="relative h-[560vh] w-full">
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#050607]">
-        {/* Dotted grid shows through between beats */}
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] bg-[size:34px_34px] opacity-12 [mask-image:radial-gradient(ellipse_at_50%_50%,black_25%,transparent_72%)]" />
-        <div className="pointer-events-none absolute -right-40 top-1/3 z-0 h-160 w-160 rounded-full bg-[#aab4c5]/12 blur-[140px]" />
+      <div className="sticky top-0 h-screen w-full overflow-hidden">
+        {/* Backdrop is the shared fixed JourneyBackdrop — the section itself
+            stays transparent so hand-offs show no background movement. */}
 
         {/* Project beats — full-bleed cinematic scenes */}
         {PROJECTS.map((project, i) => (
@@ -241,9 +226,6 @@ export default function WorkJourney() {
             progress={progress}
           />
         ))}
-
-        {/* Vignette above the scenes */}
-        <div className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_at_50%_45%,transparent_45%,rgba(0,0,0,0.55)_100%)]" />
 
         {/* Intro beat */}
         <motion.div

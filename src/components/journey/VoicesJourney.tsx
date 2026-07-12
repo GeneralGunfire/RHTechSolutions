@@ -25,13 +25,6 @@ const VOICES: Voice[] = [
   },
   {
     quote:
-      "They didn't just build what we asked for — they pushed back on the parts that didn't make sense, and the product is better for it.",
-    name: "Jaco van der Merwe",
-    role: "Founder, Private Player",
-    initials: "JM",
-  },
-  {
-    quote:
       "Our staff and students actually enjoy using the platform, which says a lot. It was built for real people, not just for a demo.",
     name: "Thandiwe Nkosi",
     role: "Head of IT, School District",
@@ -39,11 +32,14 @@ const VOICES: Voice[] = [
   },
 ];
 
-// [fadeInStart, holdStart, holdEnd, fadeOutEnd] per quote.
+// [fadeInStart, holdStart, holdEnd, fadeOutEnd] per quote. The first beat is
+// already visible at p=0 (fadeInStart === 0) and the last beat holds fully
+// visible through p=1 (holdEnd === fadeOutEnd), so the frames that slide
+// in/out at the section hand-offs always carry content. Framer Motion
+// requires transform input ranges within [0,1].
 const BEATS: [number, number, number, number][] = [
-  [0.03, 0.1, 0.26, 0.33],
-  [0.36, 0.43, 0.59, 0.66],
-  [0.69, 0.76, 0.92, 0.98],
+  [0, 0.02, 0.4, 0.48],
+  [0.54, 0.62, 1, 1],
 ];
 
 function BeatDot({
@@ -106,15 +102,7 @@ function QuoteBeat({
       className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center will-change-transform"
     >
       <span className="mb-6 font-(family-name:--font-geist-mono) text-[0.65rem] tracking-[0.3em] text-zinc-500 uppercase">
-        What people say — 0{index + 1} / 0{VOICES.length}
-      </span>
-
-      {/* Oversized quote glyph floats behind the words */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute top-[16%] font-(family-name:--font-space-grotesk) text-[11rem] font-bold leading-none text-white/4 select-none sm:text-[16rem]"
-      >
-        &ldquo;
+        What people say
       </span>
 
       <blockquote className="max-w-3xl font-(family-name:--font-space-grotesk) text-2xl font-bold leading-[1.2] tracking-tight text-white [text-shadow:0_2px_32px_rgba(0,0,0,0.8)] sm:text-4xl md:text-5xl">
@@ -149,15 +137,8 @@ export default function VoicesJourney() {
   });
 
   return (
-    <section ref={sectionRef} className="relative h-[360vh] w-full">
+    <section ref={sectionRef} className="relative h-[300vh] w-full">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* Dotted grid + glow — atmosphere continues */}
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] bg-[size:34px_34px] opacity-10 [mask-image:radial-gradient(ellipse_at_50%_50%,black_25%,transparent_72%)]" />
-        <div className="pointer-events-none absolute left-1/2 top-1/3 z-0 h-140 w-140 -translate-x-1/2 rounded-full bg-[#aab4c5]/12 blur-[140px]" />
-
-        {/* Vignette */}
-        <div className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_at_50%_45%,transparent_50%,rgba(0,0,0,0.5)_100%)]" />
-
         {VOICES.map((voice, i) => (
           <QuoteBeat
             key={voice.name}

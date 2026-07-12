@@ -207,30 +207,30 @@ export default function Hero() {
     p >= 0.45 && p <= 0.69 ? "visible" : "hidden"
   );
 
-  const s3Opacity = useTransform(progress, [0.71, 0.77, 0.84, 0.89], [0, 1, 1, 0]);
-  const s3Y = useTransform(progress, [0.71, 0.89], [60, -60]);
-  const s3Scale = useTransform(progress, [0.71, 0.77, 0.84, 0.89], [0.92, 1, 1, 1.05]);
-  const s3Blur = useTransform(progress, [0.71, 0.77, 0.84, 0.89], [8, 0, 0, 6]);
+  const s3Opacity = useTransform(progress, [0.69, 0.74, 0.8, 0.85], [0, 1, 1, 0]);
+  const s3Y = useTransform(progress, [0.69, 0.85], [60, -60]);
+  const s3Scale = useTransform(progress, [0.69, 0.74, 0.8, 0.85], [0.92, 1, 1, 1.05]);
+  const s3Blur = useTransform(progress, [0.69, 0.74, 0.8, 0.85], [8, 0, 0, 6]);
   const s3Filter = useTransform(s3Blur, (b) => `blur(${b}px)`);
   const s3Visibility = useTransform(progress, (p) =>
-    p >= 0.71 && p <= 0.9 ? "visible" : "hidden"
+    p >= 0.69 && p <= 0.86 ? "visible" : "hidden"
   );
 
-  // Final beat — "Let's build yours." lands, holds, and then the brand
-  // name materialises beneath it as the user keeps scrolling.
-  const beat3Opacity = useTransform(progress, [0.91, 0.95, 1], [0, 1, 1]);
-  const beat3Scale = useTransform(progress, [0.91, 1], [0.96, 1]);
-  const beat3Events = useTransform(progress, (p) => (p > 0.91 ? "auto" : "none"));
+  // Final beat — "Let's build yours." lands early enough to hold pinned for
+  // a real stretch of scroll before the section releases.
+  const beat3Opacity = useTransform(progress, [0.86, 0.9, 1], [0, 1, 1]);
+  const beat3Scale = useTransform(progress, [0.86, 0.92, 1], [0.96, 1, 1]);
+  const beat3Events = useTransform(progress, (p) => (p > 0.87 ? "auto" : "none"));
   const beat3Visibility = useTransform(progress, (p) =>
-    p >= 0.91 ? "visible" : "hidden"
+    p >= 0.86 ? "visible" : "hidden"
   );
 
-  // Brand reveal — fades in below the closing line: blur sharpens, letter
-  // spacing tightens, and it rises into place, all driven by scroll.
-  const brandOpacity = useTransform(progress, [0.955, 1], [0, 1]);
-  const brandY = useTransform(progress, [0.955, 1], [36, 0]);
-  const brandTracking = useTransform(progress, [0.955, 1], ["0.5em", "0.14em"]);
-  const brandBlur = useTransform(progress, [0.955, 1], [10, 0]);
+  // Brand reveal — settles fully by 96% so it holds still before the
+  // hand-off instead of finishing exactly as the section unpins.
+  const brandOpacity = useTransform(progress, [0.9, 0.96], [0, 1]);
+  const brandY = useTransform(progress, [0.9, 0.96], [36, 0]);
+  const brandTracking = useTransform(progress, [0.9, 0.96], ["0.5em", "0.14em"]);
+  const brandBlur = useTransform(progress, [0.9, 0.96], [10, 0]);
   const brandFilter = useTransform(brandBlur, (b) => `blur(${b}px)`);
 
   // Scrim dims the logo while statement beats are on screen.
@@ -240,7 +240,6 @@ export default function Hero() {
     [0, 0.42, 0.5, 0.58]
   );
 
-  const glowX = useTransform(progress, [0, 1], ["0%", "-45%"]);
   const hintOpacity = useTransform(progress, [0, 0.06], [1, 0]);
 
   useEffect(() => {
@@ -257,15 +256,8 @@ export default function Hero() {
   return (
     <section ref={sectionRef} className="relative h-[480vh] w-full">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* Dotted grid backdrop */}
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] bg-[size:34px_34px] opacity-15 [mask-image:radial-gradient(ellipse_at_60%_45%,black_25%,transparent_72%)]" />
-
-        {/* Ambient glows */}
-        <motion.div
-          style={{ x: glowX }}
-          className="pointer-events-none absolute right-[-10%] top-1/2 z-0 h-184 w-184 -translate-y-1/2 rounded-full bg-[#aab4c5]/25 blur-[140px]"
-        />
-        <div className="pointer-events-none absolute -left-32 bottom-0 z-0 h-96 w-96 rounded-full bg-[#8b95a6]/12 blur-[110px]" />
+        {/* Grid, glows, and vignette now live in the shared fixed
+            JourneyBackdrop — nothing here scrolls at the section seam. */}
 
         {/* 3D scene */}
         <div className="absolute inset-0 z-10 touch-pan-y">
@@ -293,9 +285,6 @@ export default function Hero() {
           style={{ opacity: scrimOpacity, willChange: "opacity" }}
           className="pointer-events-none absolute inset-0 z-[14] bg-black"
         />
-
-        {/* Vignette — pulls focus to center */}
-        <div className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_at_55%_45%,transparent_50%,rgba(0,0,0,0.5)_100%)]" />
 
         <HeroLoader />
 

@@ -1,8 +1,16 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { MathUtils, type Group, type Material, type Mesh } from "three";
+import { useGLTF } from "@react-three/drei";
+import {
+  Box3,
+  MathUtils,
+  Vector3,
+  type Group,
+  type Material,
+  type Mesh,
+} from "three";
 import type { MotionValue } from "framer-motion";
 
 export function smoothstep(edge0: number, edge1: number, x: number) {
@@ -105,3 +113,36 @@ export function BeatShape({
 
   return <group ref={groupRef}>{children}</group>;
 }
+
+// The brand logo, normalized and with cloned transparent materials so a
+// BeatShape can fade it in and out without touching the hero's copy.
+export function JourneyLogo({ scale = 1 }: { scale?: number }) {
+  const { scene } = useGLTF("/models/hero-model.glb");
+
+  const { object, norm, offset } = useMemo(() => {
+    const object = scene.clone(true);
+    object.traverse((obj) => {
+      const mesh = obj as Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const material = (mesh.material as Material).clone();
+        material.transparent = true;
+        mesh.material = material;
+      }
+    });
+    const box = new Box3().setFromObject(object);
+    const size = box.getSize(new Vector3());
+    const center = box.getCenter(new Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z) || 1;
+    return { object, norm: 2.2 / maxDim, offset: center.multiplyScalar(-1) };
+  }, [scene]);
+
+  return (
+    <group scale={norm * scale}>
+      <group position={offset}>
+        <primitive object={object} />
+      </group>
+    </group>
+  );
+}
+
+useGLTF.preload("/models/hero-model.glb");

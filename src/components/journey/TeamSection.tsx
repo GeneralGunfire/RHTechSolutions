@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Sparkles } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
 import {
   motion,
   useScroll,
@@ -10,7 +10,7 @@ import {
   type MotionValue,
 } from "framer-motion";
 import { FaLinkedinIn } from "react-icons/fa";
-import { BeatShape, KeyframeCameraRig, type Track } from "./three-utils";
+import { BeatShape, JourneyLogo, KeyframeCameraRig, type Track } from "./three-utils";
 
 type Member = {
   name: string;
@@ -50,15 +50,16 @@ const CAM_TARGET_X: Track = [
   [1.0, 0.9],
 ];
 
+// Member 1 gets an extreme macro dive; member 2 a close orbiting shot.
 const CAM_RADIUS: Track = [
   [0.0, 5.6],
-  [0.22, 2.4],
-  [0.42, 3.6],
+  [0.22, 1.4],
+  [0.42, 2.6],
   [0.51, 4.8],
-  [0.58, 3.8],
-  [0.68, 2.3],
-  [0.82, 3.5],
-  [1.0, 5.4],
+  [0.58, 3.2],
+  [0.68, 1.7],
+  [0.82, 2.8],
+  [1.0, 5.0],
 ];
 
 const CAM_ORBIT: Track = [
@@ -89,7 +90,7 @@ const SHAPE_RANGES: [number, number][] = [
   [0.2, 0.49],
   [0.55, 0.84],
 ];
-const OUTRO_BEAT: [number, number] = [0.88, 0.96];
+const OUTRO_BEAT: [number, number] = [0.84, 0.9];
 
 function MemberBeat({
   member,
@@ -129,25 +130,12 @@ function MemberBeat({
     p >= b && p <= c ? "auto" : "none"
   );
 
-  // The watermark letter drifts faster than the card — parallax depth.
-  const watermarkY = useTransform(progress, [a, d], [120, -120]);
 
   return (
     <motion.div
       style={{ opacity, visibility, pointerEvents: events }}
       className="absolute inset-0 z-20"
     >
-      {/* Ghosted initial — deep layer */}
-      <motion.span
-        aria-hidden
-        style={{ y: watermarkY }}
-        className={`absolute top-[8%] font-(family-name:--font-space-grotesk) text-[36vw] font-bold leading-none text-white/4 select-none sm:text-[24vw] ${
-          align === "left" ? "right-[4%]" : "left-[4%]"
-        }`}
-      >
-        {member.watermark}
-      </motion.span>
-
       <motion.div
         style={{
           x,
@@ -216,21 +204,26 @@ export default function TeamSection() {
     offset: ["start start", "end end"],
   });
 
-  // Intro beat — tilts away as the camera dives to the first member.
+  // Intro beat — visible from p=0 so the incoming frame is never blank.
   const [ia, ib, ic, id] = INTRO_BEAT;
-  const introOpacity = useTransform(progress, [ia, ib, ic, id], [0, 1, 1, 0]);
-  const introY = useTransform(progress, [ia, id], [50, -90]);
-  const introScale = useTransform(progress, [ia, id], [0.96, 1.08]);
+  const introOpacity = useTransform(progress, [ia, ib, ic, id], [1, 1, 1, 0]);
+  const introY = useTransform(progress, [ia, id], [0, -90]);
+  const introScale = useTransform(progress, [ia, id], [1, 1.08]);
   const introRotateX = useTransform(progress, [ia, id], [0, 14]);
-  const introBlur = useTransform(progress, [ia, ib, ic, id], [6, 0, 0, 10]);
+  const introBlur = useTransform(progress, [ia, ib, ic, id], [0, 0, 0, 10]);
   const introFilter = useTransform(introBlur, (b) => `blur(${b}px)`);
   const introVisibility = useTransform(progress, (p) =>
     p <= id + 0.01 ? "visible" : "hidden"
   );
 
-  // Outro beat — both monograms, held to the end.
-  const outroOpacity = useTransform(progress, [OUTRO_BEAT[0], OUTRO_BEAT[1]], [0, 1]);
-  const outroY = useTransform(progress, [OUTRO_BEAT[0], 1], [40, 0]);
+  // Outro beat — both monograms; releases before the section unpins so the
+  // hand-off to the closing act stays seamless.
+  const outroOpacity = useTransform(
+    progress,
+    [OUTRO_BEAT[0], OUTRO_BEAT[1], 1],
+    [0, 1, 1]
+  );
+  const outroY = useTransform(progress, [OUTRO_BEAT[0], OUTRO_BEAT[1], 1], [40, 0, 0]);
   const outroVisibility = useTransform(progress, (p) =>
     p >= OUTRO_BEAT[0] ? "visible" : "hidden"
   );
@@ -251,12 +244,7 @@ export default function TeamSection() {
   return (
     <section ref={sectionRef} className="relative h-[380vh] w-full">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
-        {/* Dotted grid + glows */}
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] bg-[size:34px_34px] opacity-12 [mask-image:radial-gradient(ellipse_at_50%_50%,black_25%,transparent_72%)]" />
-        <div className="pointer-events-none absolute -left-40 top-1/4 z-0 h-160 w-160 rounded-full bg-[#aab4c5]/12 blur-[140px]" />
-        <div className="pointer-events-none absolute -right-32 bottom-0 z-0 h-96 w-96 rounded-full bg-[#8b95a6]/10 blur-[110px]" />
-
-        {/* 3D scene — one abstract subject per member */}
+        {/* 3D scene — the logo, one beat per member */}
         <div className="absolute inset-0 z-10 touch-pan-y">
           <Canvas
             camera={{ position: [0, 0, 5.6], fov: 42 }}
@@ -269,36 +257,18 @@ export default function TeamSection() {
             <directionalLight position={[-6, -1, -4]} intensity={0.3} color="#c3cbd8" />
             <directionalLight position={[0, -4, 2]} intensity={0.25} color="#3a4150" />
 
-            {/* Rajen — structure: nested dodecahedron */}
-            <BeatShape progress={progress} range={SHAPE_RANGES[0]} xOffset={-1.2}>
-              <mesh>
-                <dodecahedronGeometry args={[1.15, 0]} />
-                <meshStandardMaterial wireframe transparent color="#dfe5ee" metalness={0.6} roughness={0.3} />
-              </mesh>
-              <mesh rotation={[0.5, 0.7, 0]}>
-                <icosahedronGeometry args={[0.6, 0]} />
-                <meshStandardMaterial wireframe transparent color="#8b95a6" metalness={0.6} roughness={0.4} />
-              </mesh>
-            </BeatShape>
+            {/* The brand logo again — one beat per member, the camera rig
+                framing it from a fresh high/low angle for each. */}
+            <Suspense fallback={null}>
+              <BeatShape progress={progress} range={SHAPE_RANGES[0]} xOffset={-1.2} spin={0.12}>
+                <JourneyLogo />
+              </BeatShape>
+              <BeatShape progress={progress} range={SHAPE_RANGES[1]} xOffset={1.2} spin={0.18}>
+                <JourneyLogo />
+              </BeatShape>
+              <Environment preset="city" />
+            </Suspense>
 
-            {/* Huzayfa — craft: ring around a core */}
-            <BeatShape progress={progress} range={SHAPE_RANGES[1]} xOffset={1.2} spin={0.15}>
-              <mesh rotation={[1.1, 0.3, 0]}>
-                <torusGeometry args={[1.05, 0.035, 12, 64]} />
-                <meshStandardMaterial wireframe transparent color="#dfe5ee" metalness={0.6} roughness={0.3} />
-              </mesh>
-              <mesh rotation={[0.4, 1.2, 0.5]}>
-                <torusGeometry args={[0.78, 0.03, 10, 56]} />
-                <meshStandardMaterial wireframe transparent color="#8b95a6" metalness={0.6} roughness={0.4} />
-              </mesh>
-              <mesh>
-                <icosahedronGeometry args={[0.42, 1]} />
-                <meshStandardMaterial wireframe transparent color="#ffffff" metalness={0.7} roughness={0.3} />
-              </mesh>
-            </BeatShape>
-
-            <Sparkles count={90} scale={[14, 12, 6]} size={2.2} speed={0.3} opacity={0.4} color="#dfe5ee" />
-            <Sparkles count={120} scale={[20, 16, 4]} size={1.3} speed={0.18} opacity={0.25} color="#8b95a6" />
 
             <KeyframeCameraRig
               progress={progress}
@@ -315,7 +285,6 @@ export default function TeamSection() {
           style={{ opacity: scrimOpacity, willChange: "opacity" }}
           className="pointer-events-none absolute inset-0 z-[14] bg-black"
         />
-        <div className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_at_50%_45%,transparent_50%,rgba(0,0,0,0.5)_100%)]" />
 
         {/* Intro beat */}
         <motion.div

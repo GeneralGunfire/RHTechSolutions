@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Sparkles } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
 import {
   motion,
   useMotionValue,
@@ -13,7 +13,7 @@ import {
 } from "framer-motion";
 import { type Group } from "three";
 import { FiArrowUpRight } from "react-icons/fi";
-import { KeyframeCameraRig, type Track } from "./three-utils";
+import { JourneyLogo, KeyframeCameraRig, type Track } from "./three-utils";
 
 /* Camera — a straight fly-through: it starts far outside the ring gate,
    sways gently while the statements play, and pushes through the rings so
@@ -45,36 +45,20 @@ const CAM_HEIGHT: Track = [
   [1.0, 0],
 ];
 
-// Concentric wireframe rings the camera flies through — the "gate".
-function RingGate() {
+// The brand logo is the destination — the whole scroll is one slow cinematic
+// push-in that ends right up against it as the CTA lands.
+function GateLogo() {
   const groupRef = useRef<Group>(null);
 
   useFrame((_, delta) => {
     const group = groupRef.current;
     if (!group) return;
-    group.children.forEach((ring, i) => {
-      ring.rotation.z += delta * 0.06 * (i % 2 === 0 ? 1 : -1);
-    });
+    group.rotation.y += delta * 0.18;
   });
 
   return (
-    <group ref={groupRef}>
-      <mesh>
-        <torusGeometry args={[1.7, 0.02, 12, 80]} />
-        <meshStandardMaterial wireframe transparent opacity={0.45} color="#dfe5ee" metalness={0.6} roughness={0.3} />
-      </mesh>
-      <mesh position={[0, 0, -1.6]} rotation={[0, 0, 0.5]}>
-        <torusGeometry args={[2.4, 0.018, 10, 72]} />
-        <meshStandardMaterial wireframe transparent opacity={0.3} color="#8b95a6" metalness={0.6} roughness={0.4} />
-      </mesh>
-      <mesh position={[0, 0, -3.4]} rotation={[0, 0, -0.4]}>
-        <torusGeometry args={[3.2, 0.015, 10, 64]} />
-        <meshStandardMaterial wireframe transparent opacity={0.2} color="#8b95a6" metalness={0.6} roughness={0.4} />
-      </mesh>
-      <mesh position={[0, 0, 1.4]} rotation={[0, 0, 0.8]}>
-        <torusGeometry args={[1.1, 0.014, 10, 56]} />
-        <meshStandardMaterial wireframe transparent opacity={0.35} color="#ffffff" metalness={0.7} roughness={0.3} />
-      </mesh>
+    <group ref={groupRef} scale={0.7}>
+      <JourneyLogo />
     </group>
   );
 }
@@ -129,15 +113,16 @@ export default function ClosingSection() {
     offset: ["start start", "end end"],
   });
 
-  // Beat 1 — "You've seen the work."
-  const s1Opacity = useTransform(progress, [0.04, 0.11, 0.24, 0.31], [0, 1, 1, 0]);
-  const s1Y = useTransform(progress, [0.04, 0.31], [70, -70]);
-  const s1Scale = useTransform(progress, [0.04, 0.11, 0.24, 0.31], [0.92, 1, 1, 1.06]);
-  const s1RotateX = useTransform(progress, [0.04, 0.11, 0.24, 0.31], [12, 0, 0, -9]);
-  const s1Blur = useTransform(progress, [0.04, 0.11, 0.24, 0.31], [8, 0, 0, 6]);
+  // Beat 1 — "You've seen the work." Visible from p=0 so the frame that
+  // slides in at the hand-off carries content.
+  const s1Opacity = useTransform(progress, [0, 0.24, 0.31], [1, 1, 0]);
+  const s1Y = useTransform(progress, [0, 0.31], [0, -70]);
+  const s1Scale = useTransform(progress, [0, 0.24, 0.31], [1, 1, 1.06]);
+  const s1RotateX = useTransform(progress, [0, 0.24, 0.31], [0, 0, -9]);
+  const s1Blur = useTransform(progress, [0, 0.24, 0.31], [0, 0, 6]);
   const s1Filter = useTransform(s1Blur, (v) => `blur(${v}px)`);
   const s1Visibility = useTransform(progress, (p) =>
-    p >= 0.04 && p <= 0.32 ? "visible" : "hidden"
+    p <= 0.32 ? "visible" : "hidden"
   );
 
   // Beat 2 — "Have a project in mind?"
@@ -160,10 +145,12 @@ export default function ClosingSection() {
     p >= 0.68 ? "visible" : "hidden"
   );
 
-  const brandOpacity = useTransform(progress, [0.84, 0.98], [0, 1]);
-  const brandY = useTransform(progress, [0.84, 0.98], [36, 0]);
-  const brandTracking = useTransform(progress, [0.84, 0.98], ["0.5em", "0.14em"]);
-  const brandBlur = useTransform(progress, [0.84, 0.98], [10, 0]);
+  // Settles by 90% so the CTA + brand hold still through the last stretch
+  // of scroll instead of finishing right as the footer arrives.
+  const brandOpacity = useTransform(progress, [0.78, 0.9], [0, 1]);
+  const brandY = useTransform(progress, [0.78, 0.9], [36, 0]);
+  const brandTracking = useTransform(progress, [0.78, 0.9], ["0.5em", "0.14em"]);
+  const brandBlur = useTransform(progress, [0.78, 0.9], [10, 0]);
   const brandFilter = useTransform(brandBlur, (b) => `blur(${b}px)`);
 
   const scrimOpacity = useTransform(progress, [0.04, 0.12, 1], [0, 0.3, 0.42]);
@@ -183,11 +170,7 @@ export default function ClosingSection() {
     <section ref={sectionRef} className="relative w-full">
       <div className="relative h-[340vh] w-full">
         <div className="sticky top-0 h-screen w-full overflow-hidden">
-          {/* Dotted grid + glow */}
-          <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] bg-[size:34px_34px] opacity-10 [mask-image:radial-gradient(ellipse_at_50%_50%,black_25%,transparent_72%)]" />
-          <div className="pointer-events-none absolute left-1/2 top-1/3 z-0 h-140 w-140 -translate-x-1/2 rounded-full bg-[#aab4c5]/12 blur-[140px]" />
-
-          {/* 3D scene — the ring gate */}
+          {/* 3D scene — the ring gate around the logo */}
           <div className="absolute inset-0 z-10 touch-pan-y">
             <Canvas
               camera={{ position: [0, 0.4, 8], fov: 42 }}
@@ -200,9 +183,10 @@ export default function ClosingSection() {
               <directionalLight position={[-6, -1, -4]} intensity={0.3} color="#c3cbd8" />
               <directionalLight position={[0, -4, 2]} intensity={0.25} color="#3a4150" />
 
-              <RingGate />
-              <Sparkles count={110} scale={[12, 10, 10]} size={2.2} speed={0.3} opacity={0.4} color="#dfe5ee" />
-              <Sparkles count={140} scale={[18, 14, 8]} size={1.3} speed={0.18} opacity={0.25} color="#8b95a6" />
+              <Suspense fallback={null}>
+                <GateLogo />
+                <Environment preset="city" />
+              </Suspense>
 
               <KeyframeCameraRig
                 progress={progress}
@@ -218,7 +202,6 @@ export default function ClosingSection() {
             style={{ opacity: scrimOpacity, willChange: "opacity" }}
             className="pointer-events-none absolute inset-0 z-[14] bg-black"
           />
-          <div className="pointer-events-none absolute inset-0 z-[15] bg-[radial-gradient(ellipse_at_50%_45%,transparent_50%,rgba(0,0,0,0.5)_100%)]" />
 
           {/* Beat 1 */}
           <motion.div
